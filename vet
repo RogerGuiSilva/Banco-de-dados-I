@@ -1,0 +1,126 @@
+-- =====================================================================
+-- Script para Criação e Povoamento do Banco de Dados da Clínica Veterinária
+-- =====================================================================
+
+-- Habilita o suporte a chaves estrangeiras (pode ser necessário em alguns SGBDs como o SQLite)
+PRAGMA foreign_keys = ON;
+
+-- =====================================================================
+-- SEÇÃO 1: CRIAÇÃO DAS TABELAS
+-- =====================================================================
+
+-- Tabela de Tutores (Proprietários dos Animais)
+CREATE TABLE Tutores (
+    id_tutor INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome_completo VARCHAR(100) NOT NULL,
+    cpf VARCHAR(14) NOT NULL UNIQUE,
+    telefone VARCHAR(15),
+    email VARCHAR(100) UNIQUE,
+    endereco VARCHAR(255)
+);
+
+-- Tabela de Veterinários (Profissionais da Clínica)
+CREATE TABLE Veterinarios (
+    id_veterinario INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome_completo VARCHAR(100) NOT NULL,
+    cfmv VARCHAR(20) NOT NULL UNIQUE, -- Conselho Federal de Medicina Veterinária
+    especialidade VARCHAR(50),
+    telefone VARCHAR(15) NOT NULL
+);
+
+-- Tabela de Serviços oferecidos pela clínica
+CREATE TABLE Servicos (
+    id_servico INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome_servico VARCHAR(100) NOT NULL,
+    descricao TEXT,
+    valor DECIMAL(10, 2) NOT NULL
+);
+
+-- Tabela de Animais (Pacientes)
+CREATE TABLE Animais (
+    id_animal INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_tutor INTEGER NOT NULL,
+    nome VARCHAR(50) NOT NULL,
+    especie VARCHAR(50) NOT NULL,
+    raca VARCHAR(50),
+    data_nascimento DATE,
+    sexo CHAR(1) CHECK(sexo IN ('M', 'F')), -- M: Macho, F: Fêmea
+    FOREIGN KEY (id_tutor) REFERENCES Tutores(id_tutor)
+);
+
+-- Tabela de Atendimentos (Registros de consultas, procedimentos, etc.)
+CREATE TABLE Atendimentos (
+    id_atendimento INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_animal INTEGER NOT NULL,
+    id_veterinario INTEGER NOT NULL,
+    data_atendimento DATETIME NOT NULL,
+    diagnostico TEXT,
+    observacoes TEXT,
+    FOREIGN KEY (id_animal) REFERENCES Animais(id_animal),
+    FOREIGN KEY (id_veterinario) REFERENCES Veterinarios(id_veterinario)
+);
+
+-- Tabela de Junção para o relacionamento N:M entre Atendimentos e Serviços
+CREATE TABLE Atendimento_Servicos (
+    id_atendimento INTEGER NOT NULL,
+    id_servico INTEGER NOT NULL,
+    PRIMARY KEY (id_atendimento, id_servico),
+    FOREIGN KEY (id_atendimento) REFERENCES Atendimentos(id_atendimento),
+    FOREIGN KEY (id_servico) REFERENCES Servicos(id_servico)
+);
+
+-- =====================================================================
+-- SEÇÃO 2: INSERÇÃO DE DADOS (5 exemplos para cada tabela)
+-- =====================================================================
+
+-- Inserindo dados na tabela Tutores
+INSERT INTO Tutores (nome_completo, cpf, telefone, email, endereco) VALUES
+('Ana Silva', '111.222.333-44', '(11) 98765-4321', 'ana.silva@email.com', 'Rua das Flores, 123, São Paulo, SP'),
+('Bruno Costa', '222.333.444-55', '(21) 91234-5678', 'bruno.costa@email.com', 'Avenida Principal, 456, Rio de Janeiro, RJ'),
+('Carla Mendes', '333.444.555-66', '(31) 95555-1234', 'carla.mendes@email.com', 'Praça da Liberdade, 789, Belo Horizonte, MG'),
+('Daniel Oliveira', '444.555.666-77', '(51) 98888-7777', 'daniel.o@email.com', 'Rua dos Gaúchos, 101, Porto Alegre, RS'),
+('Eduarda Ferreira', '555.666.777-88', '(71) 99999-8888', 'edu.ferreira@email.com', 'Largo do Pelourinho, 202, Salvador, BA');
+
+-- Inserindo dados na tabela Veterinarios
+INSERT INTO Veterinarios (nome_completo, cfmv, especialidade, telefone) VALUES
+('Dr. Ricardo Borges', 'CRMV-SP 12345', 'Clínico Geral', '(11) 91111-2222'),
+('Dra. Fernanda Lima', 'CRMV-RJ 54321', 'Dermatologia', '(21) 93333-4444'),
+('Dr. Lucas Martins', 'CRMV-MG 67890', 'Ortopedia', '(31) 96666-5555'),
+('Dra. Patrícia Souza', 'CRMV-SP 98765', 'Clínico Geral e Cirurgia', '(11) 97777-8888'),
+('Dr. Heitor Alves', 'CRMV-RS 11223', 'Cardiologia', '(51) 92222-1111');
+
+-- Inserindo dados na tabela Servicos
+INSERT INTO Servicos (nome_servico, descricao, valor) VALUES
+('Consulta de Rotina', 'Avaliação clínica geral do animal.', 150.00),
+('Vacina Polivalente (V10)', 'Imunização contra as principais doenças infecciosas de cães.', 120.00),
+('Vacina Quádrupla Felina (V4)', 'Imunização contra as principais doenças infecciosas de gatos.', 130.00),
+('Cirurgia de Castração', 'Procedimento cirúrgico para esterilização de cães e gatos.', 450.00),
+('Exame de Sangue - Hemograma', 'Análise das células sanguíneas para avaliação geral da saúde.', 90.00);
+
+-- Inserindo dados na tabela Animais
+INSERT INTO Animais (id_tutor, nome, especie, raca, data_nascimento, sexo) VALUES
+(1, 'Rex', 'Cachorro', 'Labrador', '2022-05-10', 'M'),
+(1, 'Mia', 'Gato', 'Siamês', '2023-01-20', 'F'),
+(2, 'Thor', 'Cachorro', 'Golden Retriever', '2021-11-15', 'M'),
+(3, 'Lola', 'Cachorro', 'Poodle', '2024-03-01', 'F'),
+(4, 'Simba', 'Gato', 'Persa', '2020-08-30', 'M');
+
+-- Inserindo dados na tabela Atendimentos
+INSERT INTO Atendimentos (id_animal, id_veterinario, data_atendimento, diagnostico, observacoes) VALUES
+(1, 1, '2025-09-15 10:30:00', 'Check-up anual', 'Animal saudável, sem alterações.'),
+(3, 2, '2025-09-15 11:15:00', 'Dermatite alérgica', 'Prescrito tratamento tópico e antialérgico.'),
+(2, 1, '2025-09-16 09:00:00', 'Check-up filhote', 'Aplicação da primeira dose da vacina.'),
+(5, 5, '2025-09-17 14:00:00', 'Sopro cardíaco leve', 'Solicitado ecocardiograma para acompanhamento.'),
+(4, 4, '2025-09-18 16:00:00', 'Pré-operatório para castração', 'Exames de sangue realizados, animal apto para cirurgia.');
+
+-- Inserindo dados na tabela Atendimento_Servicos (vinculando serviços aos atendimentos)
+INSERT INTO Atendimento_Servicos (id_atendimento, id_servico) VALUES
+(1, 1), -- Atendimento 1 (Rex) foi uma Consulta de Rotina
+(1, 2), -- Atendimento 1 (Rex) também incluiu a Vacina V10
+(2, 1), -- Atendimento 2 (Thor) foi uma Consulta de Rotina (para a dermatite)
+(3, 1), -- Atendimento 3 (Mia) foi uma Consulta de Rotina (de filhote)
+(3, 3), -- Atendimento 3 (Mia) também incluiu a Vacina V4
+(4, 1), -- Atendimento 4 (Simba) foi uma Consulta de Rotina (com o cardiologista)
+(5, 5); -- Atendimento 5 (Lola) incluiu o Exame de Sangue pré-operatório
+
+-- Fim do Script
